@@ -182,7 +182,7 @@ LABEL_FILE_LOADER:
   call KillMotor
   mov dh, 1
   call DispStr
-  ;jmp BaseOfKernelFile:OffsetOfKernelFile ; 这样是不行的
+
   lgdt [GdtPtr]
   cli
   in al, 92h
@@ -290,14 +290,14 @@ KillMotor:
 ALIGN 32
 [BITS 32]
 LABEL_PM_START:
-  ;mov ax, SelectorVideo
-  ;mov gs, ax
-  ;mov ax, SelectorFlatRW
-  ;mov ds, ax
-  ;mov es, ax
-  ;mov ss, ax
-  ;mov fs, ax
-  ;mov esp, TopOfStack
+  mov ax, SelectorVideo
+  mov gs, ax
+  mov ax, SelectorFlatRW
+  mov ds, ax
+  mov es, ax
+  mov ss, ax
+  mov fs, ax
+  mov esp, TopOfStack
   
   mov ah, 0fh
   mov al, 'P'
