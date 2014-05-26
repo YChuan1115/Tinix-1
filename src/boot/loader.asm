@@ -23,6 +23,8 @@ BS_VolID        DD 0             ; 卷序列号
 BS_VolLab       DB 'Tinix0.01  ' ; 卷标，必须11字节
 BS_FileSysType  DB 'FAT12   '    ; 文件系统类型，必须8字节
 
+%include  "pm.inc"
+
 ; =============================================================================
 
 ; 常量
@@ -49,19 +51,19 @@ MessageLength             equ   9                ; 为简单起见，下面每�
 LoadMessage               db    "Loading  "
 Message1                  db    "Ready.   "
 Message2                  db    "No KERNEL"
-Message3                  db    "LOADER OK"
+Message3                  db    "LOADER OK"    	
 
 ; =============================================================================
-%include  "pm.inc"
-LABEL_GDT: Descriptor 0, 0, 0 ; 空描述符
-LABEL_DESC_FLAT_C: Descriptor 0, 0fffffh, DA_CR|DA_32|DA_LIMIT_4K  ; 0-4G可执行段
-LABEL_DESC_FLAT_RW: Descriptor 0, 0fffffh, DA_DRW|DA_32|DA_LIMIT_4K ; 0-4G可读写段
-LABEL_DESC_VIDEO: Descriptor 0B8000h, 0ffffh, DA_DRW|DA_DPL3 ; 指向缓存的段
+
+LABEL_GDT           : Descriptor 0,       0,        0                        ; 空描述符
+LABEL_DESC_FLAT_C   : Descriptor 0,       0fffffh,  DA_CR|DA_32|DA_LIMIT_4K  ; 0-4G可执行段
+LABEL_DESC_FLAT_RW  : Descriptor 0,       0fffffh,  DA_DRW|DA_32|DA_LIMIT_4K ; 0-4G可读写段
+LABEL_DESC_VIDEO    : Descriptor 0B8000h, 0ffffh,   DA_DRW|DA_DPL3           ; 指向缓存的段
 
 GdtLen         equ    $ - LABEL_GDT
 GdtPtr         dw     GdtLen - 1
                dd     BaseOfLoaderPhyAddr + LABEL_GDT
-               
+
 SelectorFlatC  equ    LABEL_DESC_FLAT_C - LABEL_GDT
 SelectorFlatRW equ    LABEL_DESC_FLAT_RW - LABEL_GDT
 SelectorVideo  equ    LABEL_DESC_VIDEO - LABEL_GDT + SA_RPL3
@@ -76,7 +78,25 @@ LABEL_START:
   mov sp, BaseOfStack
   
   mov dh, 0
-  call DispStr
+  call DispStrRealMode
+  
+  ; 获取内存数
+  mov ebx, 0
+  mov di, _MemChkBuf
+.MemChkLoop:
+  mov eax, 0e820h
+  mov ecx, 20
+  mov edx, 0534d4150h   ; SMAP
+  int 15h
+  jc .MemChkFail
+  add di, 20
+  inc dword [_dwMCRNumber]
+  cmp ebx, 0
+  jne .MemChkLoop
+  jmp .MemChkOK
+.MemChkFail:
+  mov dword [_dwMCRNumber], 0
+.MemChkOK:
   
   xor ah, ah     ; --|
   xor dl, dl     ;   |--软驱复位
@@ -134,7 +154,7 @@ LABEL_GOTO_NEXT_SECTOR_IN_ROOT_DIR:
   
 LABEL_NO_KERNELBIN:
   mov dh, 2
-  call DispStr
+  call DispStrRealMode
   jmp $
   
 LABEL_FILENAME_FOUND:
@@ -181,7 +201,7 @@ LABEL_GOON_LOADING_FILE:
 LABEL_FILE_LOADER:
   call KillMotor
   mov dh, 1
-  call DispStr
+  call DispStrRealMode
 
   lgdt [GdtPtr]
   cli
@@ -194,7 +214,7 @@ LABEL_FILE_LOADER:
   jmp dword SelectorFlatC:(BaseOfLoaderPhyAddr+LABEL_PM_START)
 
 ; 打印消息  
-DispStr:
+DispStrRealMode:
   mov ax, MessageLength
   mul dh
   add ax, LoadMessage
@@ -299,13 +319,204 @@ LABEL_PM_START:
   mov fs, ax
   mov esp, TopOfStack
   
-  mov ah, 0fh
-  mov al, 'P'
-  mov [gs:((80*0+39)*2)], ax
+  push szMemChkTitle
+  call DispStr
+  
+  add esp, 4
+  call DispMemInfo
+  
+  ; mov ah, 0fh
+  ; mov al, 'P'
+  ; mov [gs:((80*0+39)*2)], ax
   jmp $
+  
+DispAL:
+  push ecx
+  push edx
+  push edi
+  
+  mov edi, [dwDispPos]
+  
+  mov ah, 0fH
+  mov dl, al
+  shr al, 4
+  mov ecx, 2
+  
+.begin:
+  and al, 01111b
+  cmp al, 9
+  ja .1
+  add al, '0'
+  jmp .2
+  
+.1:
+  sub al, 0AH
+  add al, 'A'
+  
+.2:
+  mov [gs:edi], ax
+  add edi, 2
+  mov al, dl
+  loop .begin
+  ;add edi, 2
+  mov [dwDispPos], edi
+  
+  pop edi
+  pop edx
+  pop ecx
+  ret  
+  
+DispInt:
+  mov eax, [esp+4]
+  shr eax, 24
+  call DispAL
+  
+  mov eax, [esp+4]
+  shr eax, 16
+  call DispAL
+  
+  mov eax, [esp+4]
+  shr eax, 8
+  call DispAL
+  
+  mov eax, [esp+4]
+  call DispAL
+  
+  mov ah, 07h
+  mov al, 'h'
+  push edi
+  mov edi, [dwDispPos]
+  mov [gs:edi], ax
+  add edi, 4
+  mov [dwDispPos], edi
+  pop edi
+  ret
+
+DispStr:
+  push ebp
+  mov ebp, esp
+  push ebx
+  push esi
+  push edi 
+  mov esi, [ebp+8]
+  mov edi, [dwDispPos]
+  mov ah, 0fh
+  
+.1:
+  lodsb
+  test al, al 
+  jz .2
+  cmp al, 0AH 
+  jnz .3
+  push eax
+  mov eax, edi
+  mov bl, 160
+  div bl 
+  and eax, 0FFH 
+  inc eax
+  mov bl, 160
+  mul bl
+  mov edi, eax
+  pop eax
+  jmp .1
+  
+.3:
+  mov [gs:edi], ax
+  add edi, 2
+  jmp .1
+  
+.2:
+  mov [dwDispPos], edi  
+  pop edi
+  pop esi 
+  pop ebx
+  pop ebp
+  ret
+  
+DispReturn:
+  push szReturn
+  call DispStr
+  add esp, 4
+  ret
+  
+DispMemInfo:
+  push esi
+  push edi
+  push ecx
+
+  mov esi, MemChkBuf
+  mov ecx, [dwMCRNumber]
+  
+.loop:
+  mov edx, 5
+  mov edi, ARDStruct
+  
+.1:
+  push dword [esi]
+  call DispInt
+  pop eax
+  stosd
+  add esi, 4
+  dec edx
+  cmp edx, 0
+  jnz .1
+  call DispReturn
+  cmp dword [dwType], 1
+  jne .2
+  mov eax, [dwBaseAddrLow]
+  add eax, [dwLengthLow]
+  cmp eax, [dwMemSize]
+  jb .2
+  mov [dwMemSize], eax
+
+.2:
+  loop .loop
+  call DispReturn
+  push szRAMSize
+  call DispStr
+  add esp, 4
+  push dword [dwMemSize]
+  call DispInt
+  add esp, 4
+  pop ecx
+  pop edi
+  pop esi
+  ret  
   
 [section .data1]
 ALIGN 32
 LABEL_DATA:
+   ; 实模式下使用
+  _szMemChkTitle:   db "BaseAddrL BaseAddrH LengthLow LengthHigh Type", 0Ah, 0
+  _szRAMSize:       db "RAM Size: ", 0 
+  _szReturn:        db 0Ah, 0
+                    
+  _dwMCRNumber:     dd 0
+  _dwDispPos:       dd (80*6+0)*2
+  _dwMemSize:       dd 0
+  _ARDStruct:
+    _dwBaseAddrLow: dd 0
+	_dwBaseAddrHigh:dd 0
+	_dwLengthLow:   dd 0
+	_dwLengthHigh:  dd 0
+	_dwType:        dd 0
+  _MemChkBuf: times 256 db 0
+  
+  ; 保护模式下使用
+  szMemChkTitle    equ  BaseOfLoaderPhyAddr + _szMemChkTitle
+  szRAMSize        equ  BaseOfLoaderPhyAddr + _szRAMSize
+  szReturn         equ  BaseOfLoaderPhyAddr + _szReturn
+  dwDispPos        equ  BaseOfLoaderPhyAddr + _dwDispPos
+  dwMemSize        equ  BaseOfLoaderPhyAddr + _dwMemSize
+  dwMCRNumber      equ  BaseOfLoaderPhyAddr + _dwMCRNumber
+  ARDStruct        equ  BaseOfLoaderPhyAddr + _ARDStruct
+    dwBaseAddrLow  equ  BaseOfLoaderPhyAddr + _dwBaseAddrLow
+	dwBaseAddrHigh equ  BaseOfLoaderPhyAddr + _dwBaseAddrHigh
+	dwLengthLow    equ  BaseOfLoaderPhyAddr + _dwLengthLow
+	dwLengthHigh   equ  BaseOfLoaderPhyAddr + _dwLengthHigh
+	dwType         equ  BaseOfLoaderPhyAddr + _dwType
+  MemChkBuf        equ  BaseOfLoaderPhyAddr + _MemChkBuf
+  
 StackSpace: times 1024 db 0  
 TopOfStack: equ BaseOfLoaderPhyAddr + $  ; 栈顶
+
