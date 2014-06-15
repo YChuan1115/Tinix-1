@@ -26,7 +26,7 @@ PUBLIC DESCRIPTOR gdt[GDT_SIZE];
 
 PUBLIC void cstart()
 {
-  disp_str("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n------\"cstart\"  begins------");
+  disp_str("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n------\"cstart\"  begins------\n");
   memcpy(&gdt, /*要复制到的目的地 -- 新的gdt*/
          (void*)(*((t_32*) (&gdt_ptr[2]))), /*段基址 表示要复制的起始地址*/
 		 *((t_16*)(&gdt_ptr[0]))+1 /*段界限+1 表示要复制的长度*/
@@ -36,4 +36,6 @@ PUBLIC void cstart()
   t_32* p_gdt_base  = (t_32*)(&gdt_ptr[2]); /*段基址 高4个字节*/
   *p_gdt_limit = GDT_SIZE * sizeof(DESCRIPTOR) - 1; /*新gdt的段界限*/
   *p_gdt_base  = (t_32)&gdt; /*新gdt的段基址*/
+  
+  disp_str("------\"cstart\"  finished------\n");
 } 

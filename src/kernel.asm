@@ -18,7 +18,7 @@ _start:
   ;mov [gs:((80*1+39)*2)], ax
   ;jmp $
   
-  ;
+  ;切换gdt
   mov esp, StackTop ; 把esp从loader切换至kernel中
   sgdt [gdt_ptr] ; 保存全局描述符至gdt_ptr中
   call cstart    ; 在cstart中更新全局描述符 -- 切换

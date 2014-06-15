@@ -1,12 +1,19 @@
 
-AS = nasm
-LD = ld
-CC = gcc
+AS   = nasm
+LD   = ld
+CC   = gcc
+DASM = ndisasm
 
-INCLUDE = -I src/
+INCLUDE  = -I src/
 AS_FLAGS = $(INCLUDE)
 CC_FLAGS = $(INCLUDE) -c 
-
+# -s 链接文件的时候删除其中的符号信息
+# -Ttext 0x30400 设置链接文件输出的地址
+LD_FLAGS = -s -Ttext 0x30400 
+# -u 和 -b 32相同，表示反汇编成32位处理器指令集
+# -o 反汇编的指令地址
+# -e 反汇编指令的偏移地址
+DASM_FLAGS = -u -o 0x30400 -e 0x400
 
 all : boot kernel buildimg
 		
@@ -19,13 +26,16 @@ kernel :
 	$(AS) $(AS_FLAGS) ./src/string.asm -f elf -o ./bin/string.o
 	$(AS) $(AS_FLAGS) ./src/klib.asm -f elf -o ./bin/klib.o
 	$(CC) $(CC_FLAGS) ./src/start.c -o ./bin/start.o
-	$(LD) -s -Ttext 0x30400 -o ./bin/kernel.bin ./bin/kernel.o ./bin/string.o ./bin/start.o ./bin/klib.o
+	$(LD) $(LD_FLAGS) -o ./bin/kernel.bin ./bin/kernel.o ./bin/string.o ./bin/start.o ./bin/klib.o
 	
 buildimg:
 	mount ./img/Tinix.img /mnt/floppy -o loop
 	cp -f ./bin/loader.bin /mnt/floppy/
 	cp -f ./bin/kernel.bin /mnt/floppy/
 	umount  /mnt/floppy
+	
+disasm:
+	$(DASM) $(DASM_FLAGS) ./bin/kernel.bin > ./bin/dis_kernel.asm
 
 clean:
 	rm -rf ./bin/*.*
