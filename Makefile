@@ -1,5 +1,6 @@
 
 AS = nasm
+LD = ld
 
 INCLUDE = -I src/boot/
 FLAGS = $(INCLUDE)
@@ -12,7 +13,7 @@ boot :
 	
 kernel : 
 	$(AS) $(FLAGS) ./src/boot/kernel.asm -f elf -o ./bin/kernel.o
-	$(LD) $(FLAGS) -s ./bin/kernel.o -o ./bin/kernel.bin
+	$(LD) $(FLAGS) -s -Ttext 0x30400 ./bin/kernel.o -o ./bin/kernel.bin
 	
 buildimg:
 	mount ./img/Tinix.img /mnt/floppy -o loop

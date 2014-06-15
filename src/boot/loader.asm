@@ -33,7 +33,9 @@ BaseOfLoader              equ   09000h
 OffsetOfLoader            equ   0100h
 BaseOfLoaderPhyAddr       equ   BaseOfLoader*10h
 BaseOfKernelFile          equ   08000h           ; Kernel.bin被加载到的位置 -- 段地址
+BaseOfKernelPhyAddr       equ   BaseOfKernelFile*10h
 OffsetOfKernelFile        equ   0                ; Kernel.bin被加载到的位置 -- 偏移地址
+KernelEntryPointPhyAddr   equ   0x30400
 RootDirSectors            equ   14               ; 根目录占用空间
 SectorNoOfRootDirectory   equ   19               ; Root Directory 的第一个扇区
 DeltaSectorNo             equ   17
@@ -53,20 +55,27 @@ Message1                  db    "Ready.   "
 Message2                  db    "No KERNEL"
 Message3                  db    "LOADER OK"    	
 
+PageDirBase    equ  200000h
+PageTblBase    equ  201000h
+
 ; =============================================================================
 
-LABEL_GDT           : Descriptor 0,       0,        0                        ; 空描述符
-LABEL_DESC_FLAT_C   : Descriptor 0,       0fffffh,  DA_CR|DA_32|DA_LIMIT_4K  ; 0-4G可执行段
-LABEL_DESC_FLAT_RW  : Descriptor 0,       0fffffh,  DA_DRW|DA_32|DA_LIMIT_4K ; 0-4G可读写段
-LABEL_DESC_VIDEO    : Descriptor 0B8000h, 0ffffh,   DA_DRW|DA_DPL3           ; 指向缓存的段
+LABEL_GDT           : Descriptor 0,           0,        0                        ; 空描述符
+LABEL_DESC_FLAT_C   : Descriptor 0,           0fffffh,  DA_CR|DA_32|DA_LIMIT_4K  ; 0-4G可执行段
+LABEL_DESC_FLAT_RW  : Descriptor 0,           0fffffh,  DA_DRW|DA_32|DA_LIMIT_4K ; 0-4G可读写段
+LABEL_DESC_VIDEO    : Descriptor 0B8000h,     0ffffh,   DA_DRW|DA_DPL3           ; 指向缓存的段
+LABEL_DESC_PAGE_DIR : Descriptor PageDirBase, 4095,     DA_DRW
+LABEL_DESC_PAGE_TBL : Descriptor PageTblBase, 1023,     DA_DRW|DA_LIMIT_4K
 
-GdtLen         equ    $ - LABEL_GDT
-GdtPtr         dw     GdtLen - 1
-               dd     BaseOfLoaderPhyAddr + LABEL_GDT
-
-SelectorFlatC  equ    LABEL_DESC_FLAT_C - LABEL_GDT
-SelectorFlatRW equ    LABEL_DESC_FLAT_RW - LABEL_GDT
-SelectorVideo  equ    LABEL_DESC_VIDEO - LABEL_GDT + SA_RPL3
+GdtLen          equ    $ - LABEL_GDT
+GdtPtr          dw     GdtLen - 1
+                dd     BaseOfLoaderPhyAddr + LABEL_GDT
+                
+SelectorFlatC   equ    LABEL_DESC_FLAT_C   - LABEL_GDT  ;
+SelectorFlatRW  equ    LABEL_DESC_FLAT_RW  - LABEL_GDT
+SelectorVideo   equ    LABEL_DESC_VIDEO    - LABEL_GDT + SA_RPL3
+SelectorPageDir equ    LABEL_DESC_PAGE_DIR - LABEL_GDT
+SelectorPageTbl equ    LABEL_DESC_PAGE_TBL - LABEL_GDT
 
 ; =============================================================================
 
@@ -323,12 +332,20 @@ LABEL_PM_START:
   call DispStr
   
   add esp, 4
-  call DispMemInfo
+  call DispMemInfo  ; addr = 0x903a4
+  call SetupPaging  ; addr = 0x903a9
   
-  ; mov ah, 0fh
-  ; mov al, 'P'
-  ; mov [gs:((80*0+39)*2)], ax
-  jmp $
+  mov ah, 0fh
+  mov al, 'P'
+  mov [gs:((80*0+39)*2)], ax  
+  ;jmp $
+  
+  ; 恢复es寄存器 （SetupPaging中改变了es值）
+  mov ax, SelectorFlatRW
+  mov es, ax
+  
+  call InitKernel  ; addr = 0x903b9 
+  jmp SelectorFlatC:KernelEntryPointPhyAddr ; addr = 0x903be
   
 DispAL:
   push ecx
@@ -481,7 +498,116 @@ DispMemInfo:
   pop ecx
   pop edi
   pop esi
-  ret  
+  ret 
+
+SetupPaging:
+  xor edx, edx
+  mov eax, [dwMemSize]
+  mov ebx, 400000h; 4M=1024*1024 一个页表对应的内存大小
+  div ebx
+  mov ecx, eax  ;此时ecx为页表的个数
+  test edx, edx
+  jz .no_remainder
+  inc ecx ;如果余数不为0就增加一个页表
+.no_remainder:
+  push ecx ;暂存页表个数
+  
+  ; 为简化处理，所有线性地址对应相等的物理地址，并且不考虑内存空洞
+  ; 首先初始化页目录
+  mov ax, SelectorPageDir
+  mov es, ax
+  xor edi, edi
+  xor eax, eax
+  mov eax, PageTblBase | PG_P | PG_USU | PG_RWW
+.1:
+  stosd  ; 将EAX中的值保存到ES:EDI指向的地址中 --- 初始化页目录
+  add eax, 4096 ; 为了简化，所有页表在内存中都是连续的
+  loop .1 ; 初始化ecx个页表目录项
+  
+  ; 再初始化所有页表(1024个 4M内存空间)
+  mov ax, SelectorPageTbl
+  mov es, ax
+  pop eax        ; 页表个数 
+  mov ebx, 1024  ; 每个页表1024个PTE
+  mul ebx
+  mov ecx, eax   ; PTE个数=1024*页表个数
+  xor edi, edi
+  xor eax, eax
+  mov eax, PG_P | PG_USU | PG_RWW
+.2:
+  stosd
+  add eax, 4096
+  loop .2    
+  
+  mov eax, PageDirBase
+  mov cr3, eax
+  mov eax, cr0
+  or eax, 80000000h
+  mov cr0, eax
+  jmp short .3
+.3:
+  nop 
+  ret
+  
+InitKernel:
+  xor esi, esi
+  mov cx, word [BaseOfKernelPhyAddr + 2ch] ; ELF头中的e_phnum -- Program Header Table中条目个数
+  movzx ecx, cx
+  mov esi, [BaseOfKernelPhyAddr + 1ch] ; ELF头中e_phoff -- Program Header Table在文件中的偏移
+  add esi, BaseOfKernelPhyAddr
+.Begin:
+  mov eax, [esi]
+  cmp eax, 0 ; 检查p_type是否为PT_NULL，PT_LOAD（1）表示加载项
+  jz .NoAction
+  
+  ;调用函数MemCpy压栈传参
+  push dword [esi + 010h] ; p_filesz值      --- size
+  mov eax, [esi + 04h]
+  add eax, BaseOfKernelPhyAddr ; p_offset值 --- src
+  push eax
+  push dword [esi + 08h] ;  p_vaddr值       --- dst
+  call MemCpy
+  add esp, 12
+.NoAction:
+  add esi, 020h
+  dec ecx
+  jnz .Begin
+  ret
+
+; 内存拷贝 将 kernel.bin内容拷贝至 0x30000中 
+; 函数原型 void* MemCpy(void* es:pDest, void* ds:pSrc, int iSize);  
+MemCpy:
+  push ebp   ; addr = 0x905ae
+  mov ebp, esp
+  push esi
+  push edi
+  push ecx
+
+  mov edi, [ebp + 8]  ; dst
+  mov esi, [ebp + 12] ; src
+  mov ecx, [ebp + 16] ; size
+  
+.1:
+  cmp ecx, 0 ; 判断计数器
+  jz .2	 ; 计数器为零时跳出
+
+  ; 逐字节拷贝移动
+  mov al, [ds:esi]
+  inc esi
+  mov byte [es:edi], al  ; ------- es:0x28 为SelectorPageTbl的值
+  inc edi
+  dec ecx ; 计数器减一
+  jmp .1; 循环
+  
+.2:
+  mov eax, [ebp + 8] ; 返回值
+
+  pop ecx
+  pop edi
+  pop esi
+  mov esp, ebp
+  pop ebp
+  ret
   
 [section .data1]
 ALIGN 32
