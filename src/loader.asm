@@ -335,10 +335,10 @@ LABEL_PM_START:
   call DispMemInfo  ; addr = 0x903a4
   call SetupPaging  ; addr = 0x903a9
   
-  mov ah, 0fh
-  mov al, 'P'
-  mov [gs:((80*0+39)*2)], ax  
-  ;jmp $
+  ; mov ah, 0fh
+  ; mov al, 'P'
+  ; mov [gs:((80*0+39)*2)], ax  
+  ; jmp $
   
   ; 恢复es寄存器 （SetupPaging中改变了es值）
   mov ax, SelectorFlatRW
