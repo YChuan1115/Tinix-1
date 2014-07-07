@@ -1,1 +1,1 @@
-bochsdbg.exe -q -f bochsrc.bxrc
+bochsdbg.exe -q -f bochsrc.bxrc 

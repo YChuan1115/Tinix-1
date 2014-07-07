@@ -1,7 +1,7 @@
 ###############################################################
 # bochsrc.bxrc file for Tinix.
 ###############################################################
-
+ 
 # how much memory the emulated machine will have
 megs: 32
 
