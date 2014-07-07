@@ -57,10 +57,10 @@ PUBLIC void cstart()
   *p_gdt_limit = GDT_SIZE * sizeof(DESCRIPTOR) - 1; /*新gdt的段界限*/
   *p_gdt_base  = (t_32)&gdt; /*新gdt的段基址*/
   
-  t_16* p_idt_limit = (t_16*)(&idt_ptr[0]);
-  t_32* p_idt_base  = (t_32*)(&idt_ptr[2]);
-  *p_idt_limit = IDT_SIZE * sizeof(GATE) - 1;
-  *p_idt_base  = (t_32)&idt;
+  t_16* p_idt_limit = (t_16*)(&idt_ptr[0]); /*段界限 低2个字节*/
+  t_32* p_idt_base  = (t_32*)(&idt_ptr[2]); /*段基址 高4个字节*/
+  *p_idt_limit = IDT_SIZE * sizeof(GATE) - 1; /*idt的段界限*/
+  *p_idt_base  = (t_32)&idt; /*idt的段基址*/
   
   init_prot();
   
