@@ -31,6 +31,14 @@ global stack_exception
 global general_protection
 global page_fault
 global copr_error
+global hwint00
+global hwint01
+global hwint02
+global hwint03
+global hwint04
+global hwint05
+global hwint06
+global hwint07
 
 _start:
   ; 显示成功跳转至内核
@@ -49,7 +57,8 @@ _start:
   
 csinit:
   ;ud2  ; 产生UD2异常
-  jmp 0x40:0
+  ;jmp 0x40:0
+  sti
   hlt
   
 %macro hwint_master 1

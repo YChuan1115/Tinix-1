@@ -28,6 +28,14 @@ void stack_exception();
 void general_protection();
 void page_fault();
 void copr_error();
+void hwint00();
+void hwint01();
+void hwint02();
+void hwint03();
+void hwint04();
+void hwint05();
+void hwint06();
+void hwint07();
 
 /*inner function*/
 PUBLIC void cstart();
@@ -155,15 +163,15 @@ PUBLIC void exception_handler(int vec_no, int err_code, int eip, int cs, int efl
 
 PUBLIC void init_8259A()
 {
-  out_byte(INT_M_CTL, 0x11);
-  out_byte(INT_S_CTL, 0x11);
+  out_byte(INT_M_CTL,     0x11);
+  out_byte(INT_S_CTL,     0x11);
   out_byte(INT_M_CTLMASK, INT_VECTOR_IRQ0);
   out_byte(INT_S_CTLMASK, INT_VECTOR_IRQ8);
   out_byte(INT_M_CTLMASK, 0x4);
   out_byte(INT_S_CTLMASK, 0x2);
   out_byte(INT_M_CTLMASK, 0x1);
   out_byte(INT_S_CTLMASK, 0x1);
-  out_byte(INT_M_CTLMASK, 0xFF);
+  out_byte(INT_M_CTLMASK, 0xFD);
   out_byte(INT_S_CTLMASK, 0xFF);
 }
 
@@ -199,6 +207,14 @@ PUBLIC void init_prot()
   init_idt_desc(INT_VECTOR_PROTECTION,   DA_386IGate, general_protection,    PRIVILEGE_KRNL);
   init_idt_desc(INT_VECTOR_PAGE_FAULT,   DA_386IGate, page_fault,            PRIVILEGE_KRNL);
   init_idt_desc(INT_VECTOR_COPROC_ERR,   DA_386IGate, copr_error,            PRIVILEGE_KRNL);
+  init_idt_desc(INT_VECTOR_IRQ0+0,       DA_386IGate, hwint00,               PRIVILEGE_KRNL);
+  init_idt_desc(INT_VECTOR_IRQ0+1,       DA_386IGate, hwint01,               PRIVILEGE_KRNL);
+  init_idt_desc(INT_VECTOR_IRQ0+2,       DA_386IGate, hwint02,               PRIVILEGE_KRNL);
+  init_idt_desc(INT_VECTOR_IRQ0+3,       DA_386IGate, hwint03,               PRIVILEGE_KRNL);
+  init_idt_desc(INT_VECTOR_IRQ0+4,       DA_386IGate, hwint04,               PRIVILEGE_KRNL);
+  init_idt_desc(INT_VECTOR_IRQ0+5,       DA_386IGate, hwint05,               PRIVILEGE_KRNL);
+  init_idt_desc(INT_VECTOR_IRQ0+6,       DA_386IGate, hwint06,               PRIVILEGE_KRNL);
+  init_idt_desc(INT_VECTOR_IRQ0+7,       DA_386IGate, hwint07,               PRIVILEGE_KRNL);
 }
 
 PUBLIC void spurious_irq(int irq)
