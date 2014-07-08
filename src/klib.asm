@@ -1,6 +1,5 @@
 
-[section .data]
-disp_pos dd 0
+extern disp_pos
 
 [section .text]
 

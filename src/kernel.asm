@@ -47,7 +47,8 @@ _start:
   jmp SELECTOR_KERNEL_CS:csinit
   
 csinit:
-  ud2  ; 产生UD2异常
+  ;ud2  ; 产生UD2异常
+  jmp 0x40:0
   hlt
   
 divide_error:

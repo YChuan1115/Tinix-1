@@ -46,6 +46,7 @@ PUBLIC DESCRIPTOR idt[IDT_SIZE];
 
 PUBLIC void cstart()
 {
+  disp_pos = 0;
   disp_str("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n------\"cstart\"  begins------\n");
   memcpy(&gdt, /*要复制到的目的地 -- 新的gdt*/
          (void*)(*((t_32*) (&gdt_ptr[2]))), /*段基址 表示要复制的起始地址*/
@@ -78,7 +79,7 @@ PUBLIC char* itoa(char* str, int num)
   if (num==0) {
     *p++ = '0';
   } else {
-    for (i=28; i>=0; i--) {
+    for (i=28; i>=0; i-=4) {
 	  ch = (num >> i) & 0xf;
 	  if (flag || ch > 0) {
 	    flag = TRUE;
@@ -170,7 +171,7 @@ PUBLIC void init_idt_desc(unsigned char vector, t_8 desc_type, t_pf_int_handler 
   GATE* p_gate = (GATE*)&idt[vector];
   t_32 base = (t_32)handler;
   p_gate->offset_low = base & 0xffff;
-  p_gate->selector = 8/*SELECTOR_KERNEL_CS=8*/;
+  p_gate->selector = SELECTOR_KERNEL_CS;
   p_gate->dcount = 0;
   p_gate->attr = desc_type | (privilege << 5);
   p_gate->offset_high = (base >> 16) & 0xffff;  
