@@ -9,6 +9,7 @@ PUBLIC void disp_str(char* pszInfo);
 PUBLIC void disp_color_str(char* pszInfo, int text_color);
 PUBLIC void out_byte(t_port port, t_8 value);
 PUBLIC void in_byte(t_port port);
+PUBLIC void spurious_irq(int irq);
 
 /*exception function*/
 void divide_error();
@@ -199,4 +200,12 @@ PUBLIC void init_prot()
   init_idt_desc(INT_VECTOR_PAGE_FAULT,   DA_386IGate, page_fault,            PRIVILEGE_KRNL);
   init_idt_desc(INT_VECTOR_COPROC_ERR,   DA_386IGate, copr_error,            PRIVILEGE_KRNL);
 }
+
+PUBLIC void spurious_irq(int irq)
+{
+  disp_str("spurious_irq:  ");
+  disp_int(irq);
+  disp_str("\n");
+}
+
 

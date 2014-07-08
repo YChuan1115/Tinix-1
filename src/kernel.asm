@@ -5,6 +5,7 @@ extern cstart
 extern gdt_ptr
 extern idt_ptr
 extern exception_handler
+extern spurious_irq
 
 [section .bss]
 ; resb resw resd resq rest被设计用在bss段中，用来声明未初始化的存储空间
@@ -50,6 +51,38 @@ csinit:
   ;ud2  ; 产生UD2异常
   jmp 0x40:0
   hlt
+  
+%macro hwint_master 1
+push %1
+call spurious_irq
+add esp, 4
+%endmacro
+
+align 16
+hwint00:
+  hwint_master 0
+align 16
+hwint01:
+  hwint_master 1
+align 16
+hwint02:
+  hwint_master 2
+align 16
+hwint03:
+  hwint_master 3
+align 16
+hwint04:
+  hwint_master 4
+align 16
+hwint05:
+  hwint_master 5
+align 16
+hwint06:
+  hwint_master 6
+align 16
+hwint07:
+  hwint_master 7
+
   
 divide_error:
   push 0xffffffff
