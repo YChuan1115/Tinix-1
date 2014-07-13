@@ -39,6 +39,14 @@ global hwint04
 global hwint05
 global hwint06
 global hwint07
+global hwint08
+global hwint09
+global hwint10
+global hwint11
+global hwint12
+global hwint13
+global hwint14
+global hwint15
 
 _start:
   ; 显示成功跳转至内核
@@ -62,35 +70,52 @@ csinit:
   hlt
   
 %macro hwint_master 1
-push %1
-call spurious_irq
-add esp, 4
+  push %1
+  call spurious_irq
+  add esp, 4
+  hlt
 %endmacro
 
 align 16
-hwint00:
-  hwint_master 0
+hwint00:hwint_master 0
 align 16
-hwint01:
-  hwint_master 1
+hwint01:hwint_master 1
 align 16
-hwint02:
-  hwint_master 2
+hwint02:hwint_master 2
 align 16
-hwint03:
-  hwint_master 3
+hwint03:hwint_master 3
 align 16
-hwint04:
-  hwint_master 4
+hwint04:hwint_master 4
 align 16
-hwint05:
-  hwint_master 5
+hwint05:hwint_master 5
 align 16
-hwint06:
-  hwint_master 6
+hwint06:hwint_master 6
 align 16
-hwint07:
-  hwint_master 7
+hwint07:hwint_master 7
+  
+%macro hwint_slave 1
+  push %1
+  call spurious_irq
+  add esp, 4
+  hlt
+%endmacro
+
+align 16
+hwint08:hwint_slave 8
+align 16
+hwint09:hwint_slave 9
+align 16
+hwint10:hwint_slave 10
+align 16
+hwint11:hwint_slave 11
+align 16
+hwint12:hwint_slave 12
+align 16
+hwint13:hwint_slave 13
+align 16
+hwint14:hwint_slave 14
+align 16
+hwint15:hwint_slave 15
 
   
 divide_error:

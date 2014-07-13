@@ -42,7 +42,7 @@
 00000000000i[DEV  ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[     ] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS ] Using local time for initial clock
-00000000000i[CMOS ] Setting initial clock to: Tue Jul 08 21:45:15 2014 (time0=1404827115)
+00000000000i[CMOS ] Setting initial clock to: Sun Jul 13 17:20:30 2014 (time0=1405243230)
 00000000000i[     ] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA  ] channel 4 used by cascade
 00000000000i[     ] init_dev of 'pic' plugin device by virtual method
@@ -196,4 +196,12 @@
 00001404330i[BIOS ] bios_table_cur_addr: 0x000fa674
 00029625469i[BIOS ] Booting from 0000:7c00
 00032170595i[MEM0 ] allocate_block: block=0x2 used 0x3 of 0x20
-00147215321i[CPU0 ] WARNING: HLT instruction with IF=0!
+00100801380i[CPU0 ] WARNING: HLT instruction with IF=0!
+00170400000i[KBD  ] internal keyboard buffer full, ignoring scancode.(9c)
+00171200000i[KBD  ] internal keyboard buffer full, ignoring scancode.(02)
+00171200000i[KBD  ] internal keyboard buffer full, ignoring scancode.(03)
+00174400000i[KBD  ] internal keyboard buffer full, ignoring scancode.(82)
+00174400000i[KBD  ] internal keyboard buffer full, ignoring scancode.(83)
+00176000000i[KBD  ] internal keyboard buffer full, ignoring scancode.(1c)
+00179200000i[KBD  ] internal keyboard buffer full, ignoring scancode.(9c)
+01611200000e[WGUI ] Sim client size(0, 0) != stretched size(720, 400)!
