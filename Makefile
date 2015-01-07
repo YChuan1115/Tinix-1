@@ -6,10 +6,10 @@ DASM = ndisasm
 
 INCLUDE  = -I src/
 AS_FLAGS = $(INCLUDE)
-CC_FLAGS = $(INCLUDE) -c 
+CC_FLAGS = $(INCLUDE) -m32 -c 
 # -s 链接文件的时候删除其中的符号信息
 # -Ttext 0x30400 设置链接文件输出的地址
-LD_FLAGS = -s -Ttext 0x30400 
+LD_FLAGS = -s -Ttext 0x30400 -melf_i386
 # -u 和 -b 32相同，表示反汇编成32位处理器指令集
 # -o 反汇编的指令地址
 # -e 反汇编指令的偏移地址
