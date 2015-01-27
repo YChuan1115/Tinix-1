@@ -2,6 +2,7 @@ SELECTOR_KERNEL_CS equ 8
 
 ; 外部定义符号
 extern cstart
+extern tinix_main
 extern gdt_ptr
 extern idt_ptr
 extern exception_handler
@@ -66,8 +67,9 @@ _start:
 csinit:
   ;ud2  ; 产生UD2异常
   ;jmp 0x40:0
-  sti
-  hlt
+  ;sti
+  ;hlt
+  jmp tinix_main
   
 %macro hwint_master 1
   push %1

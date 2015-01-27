@@ -26,7 +26,8 @@ kernel :
 	$(AS) $(AS_FLAGS) ./src/string.asm -f elf -o ./bin/string.o
 	$(AS) $(AS_FLAGS) ./src/klib.asm -f elf -o ./bin/klib.o
 	$(CC) $(CC_FLAGS) ./src/start.c -o ./bin/start.o
-	$(LD) $(LD_FLAGS) -o ./bin/kernel.bin ./bin/kernel.o ./bin/string.o ./bin/start.o ./bin/klib.o
+	$(CC) $(CC_FLAGS) ./src/main.c -o ./bin/main.o
+	$(LD) $(LD_FLAGS) -o ./bin/kernel.bin ./bin/kernel.o ./bin/string.o ./bin/start.o ./bin/klib.o ./bin/main.o
 	
 buildimg:
 	mount ./img/Tinix.img /mnt/floppy -o loop
