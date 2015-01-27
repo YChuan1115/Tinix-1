@@ -1,6 +1,8 @@
 
 #include "type.h"
 
+PUBLIC PROCESS proc_table[NR_TASKS];
+
 PUBLIC int tinix_main()
 {
   disp_str("------\"tinix_main\" begins------");

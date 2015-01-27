@@ -54,6 +54,8 @@
 #define INT_VECTOR_IRQ0  0x20
 #define INT_VECTOR_IRQ8  0x28
 
+#define NR_TASKS 1
+
 /*每个任务有一个单独的LDT, 每个LDT中的描述符个数为：*/
 #define LDT_SIZE 2
 
