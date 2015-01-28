@@ -1,59 +1,6 @@
 
 #include "type.h"
 
-typedef void (*t_pf_int_handler)();
-
-/*outer function*/
-PUBLIC void* memcpy(void* pDest, void* pSrc, int iSize);
-PUBLIC void disp_str(char* pszInfo);
-PUBLIC void disp_color_str(char* pszInfo, int text_color);
-PUBLIC void out_byte(t_port port, t_8 value);
-PUBLIC void in_byte(t_port port);
-PUBLIC void spurious_irq(int irq);
-
-/*exception function*/
-void divide_error();
-void single_step_exception();
-void nmi();
-void breakpoint_exception();
-void overflow();
-void bounds_check();
-void inval_opcode();
-void copr_not_available();
-void double_fault();
-void copr_seg_overrun();
-void inval_tss();
-void segment_not_present();
-void stack_exception();
-void general_protection();
-void page_fault();
-void copr_error();
-void hwint00();
-void hwint01();
-void hwint02();
-void hwint03();
-void hwint04();
-void hwint05();
-void hwint06();
-void hwint07();
-void hwint08();
-void hwint09();
-void hwint10();
-void hwint11();
-void hwint12();
-void hwint13();
-void hwint14();
-void hwint15();
-
-/*inner function*/
-PUBLIC void cstart();
-PUBLIC char* itoa(char* str, int num);
-PUBLIC void disp_int(int input);
-PUBLIC void exception_handler(int vec_no, int err_code, int eip, int cs, int eflags);
-PUBLIC void init_8259A();
-PUBLIC void init_idt_desc(unsigned char vector, t_8 desc_type, t_pf_int_handler handler, unsigned char privilege);
-PUBLIC void init_prot();
-
 /*variable*/
 PUBLIC int disp_pos;
 PUBLIC t_8 gdt_ptr[6];
