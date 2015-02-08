@@ -33,7 +33,7 @@
 00000000000i[      ]   SB16 support: yes
 00000000000i[      ]   USB support: yes
 00000000000i[      ]   VGA extension support: vbe cirrus voodoo
-00000000000i[MEM0  ] allocated memory at 03BC0020. after alignment, vector=03BC1000
+00000000000i[MEM0  ] allocated memory at 03B90020. after alignment, vector=03B91000
 00000000000i[MEM0  ] 32.00MB
 00000000000i[MEM0  ] mem block size = 0x00100000, blocks=32
 00000000000i[MEM0  ] rom at 0xfffe0000/131072 ('C:\Program Files (x86)\Bochs-2.6.7/BIOS-bochs-latest')
@@ -44,7 +44,7 @@
 00000000000i[DEV   ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[PLUGIN] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS  ] Using local time for initial clock
-00000000000i[CMOS  ] Setting initial clock to: Wed Jan 28 22:59:22 2015 (time0=1422457162)
+00000000000i[CMOS  ] Setting initial clock to: Sun Feb 08 20:45:58 2015 (time0=1423399558)
 00000000000i[PLUGIN] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA   ] channel 4 used by cascade
 00000000000i[PLUGIN] init_dev of 'pic' plugin device by virtual method
@@ -152,7 +152,7 @@
 00000322260i[BIOS  ] ram_end=32MB
 00000362770i[BIOS  ] Found 1 cpu(s)
 00000376974i[BIOS  ] bios_table_addr: 0x000fa498 end=0x000fcc00
-00000607816i[WINGUI] dimension update x=720 y=400 fontheight=16 fontwidth=9 bpp=8
+00000606440i[WINGUI] dimension update x=720 y=400 fontheight=16 fontwidth=9 bpp=8
 00000704769i[PCI   ] i440FX PMC write to PAM register 59 (TLB Flush)
 00001032698i[P2ISA ] PCI IRQ routing: PIRQA# set to 0x0b
 00001032717i[P2ISA ] PCI IRQ routing: PIRQB# set to 0x09
@@ -186,3 +186,4 @@
 00001403694i[PCI   ] i440FX PMC write to PAM register 59 (TLB Flush)
 00001404417i[BIOS  ] bios_table_cur_addr: 0x000fa6c4
 00029625339i[BIOS  ] Booting from 0000:7c00
+00354578762i[WINGUI] &&&missing mouse state change
